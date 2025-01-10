@@ -2,39 +2,9 @@ from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
 import random
-import sqlite3
 import time
 
 app = Flask(__name__)
-
-# إعداد قاعدة البيانات
-def init_db():
-    conn = sqlite3.connect('reports.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            channel_link TEXT,
-            group_link TEXT,
-            account_link TEXT,
-            status TEXT,
-            response TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-# دالة لإضافة البلاغ إلى قاعدة البيانات
-def add_report_to_db(user_id, channel_link, group_link, account_link, status, response):
-    conn = sqlite3.connect('reports.db')
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO reports (user_id, channel_link, group_link, account_link, status, response)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (user_id, channel_link, group_link, account_link, status, response))
-    conn.commit()
-    conn.close()
 
 # إعداد المتغيرات المحظورة
 BLOCKED_IDS = ["7762072754"]
@@ -101,10 +71,7 @@ def send_report():
                             status = "failed"
                             response_text = "Report may not have been successful. Please check the data."
 
-                        # إضافة البلاغ إلى قاعدة البيانات
-                        add_report_to_db(user_id, channel_link, group_link, account_link, status, response_text)
-
-                        # إضافة النتيجة إلى القائمة
+                        # إضافة النتيجة إلى القائمة بدون قاعدة بيانات
                         responses.append({
                             "status": status,
                             "response": response_text
@@ -124,5 +91,4 @@ def send_report():
     })
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
